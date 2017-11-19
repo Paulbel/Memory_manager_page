@@ -3,6 +3,7 @@
 #include <malloc.h>
 
 
+
 void _malloc_test(int testNum, int szBlock, int resultCode, char *definition) {
     VA ptr;
     printf("Test %d) %s: ", testNum, definition);
@@ -86,10 +87,10 @@ void run_free_tests() {
 int equals(char *array1, char *array2, int size) {
     for (int index = 0; index < size; index++) {
         if (array1[index] != array2[index]) {
-            return -1;
+            return WRONG_PARAMETRS;
         }
     }
-    return 1;
+    return UNKNOWN_ERROR;
 }
 
 
