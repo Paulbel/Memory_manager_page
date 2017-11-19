@@ -21,7 +21,7 @@ struct pageNode {
 
 int findFreePageIndexInMemory() {
     for (int pageIndex = 0; pageIndex < PAGE_MEMORY_NUMBER; pageIndex++) {
-        if (memory[pageIndex].hasVirtualPage == 0) {
+        if (memory[pageIndex].hasVirtualPage == false) {
             return pageIndex;
         }
     }
@@ -30,7 +30,7 @@ int findFreePageIndexInMemory() {
 
 int findFreePageIndexInHDD() {
     for (int pageIndex = 0; pageIndex < PAGE_HDD_NUMBER; pageIndex++) {
-        if (HDD[pageIndex].hasVirtualPage == 0) {
+        if (HDD[pageIndex].hasVirtualPage == false) {
             return pageIndex;
         }
     }
@@ -41,7 +41,7 @@ int findFreePageIndexInHDD() {
 int findNumberPagesToMove() {
     int length = 0;
     for (int pageIndex = 0; pageIndex < PAGE_MEMORY_NUMBER; pageIndex++) {
-        if (memory[pageIndex].hasVirtualPage == 1) {
+        if (memory[pageIndex].hasVirtualPage == true) {
             length++;
         }
     }
@@ -52,7 +52,7 @@ int *createIndexArray(int length) {
     int index = 0;
     int pageIndex = 0;
     while (index < PAGE_MEMORY_NUMBER) {
-        if (memory[index].hasVirtualPage == 1) {
+        if (memory[index].hasVirtualPage == true) {
             nodeArray[pageIndex].index = index;
             nodeArray[pageIndex].value = memory[index].timesRead;
             pageIndex++;
@@ -83,7 +83,7 @@ int *createIndexArray(int length) {
 int moveToHDD(int pageIndex) {
     struct pageInfo *pageInfo = pageTable;
     while (pageInfo->nextDescriptor != NULL) {
-        if (pageInfo->offsetPage == pageIndex && pageInfo->isUse == 1) {
+        if (pageInfo->offsetPage == pageIndex && pageInfo->isUse == true) {
             break;
         }
         pageInfo = pageInfo->nextDescriptor;
@@ -98,7 +98,7 @@ int moveToHDD(int pageIndex) {
     HDD[newPageIndex] = memory[pageIndex];
     memory[pageIndex] = tempPage;
     pageInfo->offsetPage = newPageIndex;
-    pageInfo->isUse = 0;
+    pageInfo->isUse = false;
 
     return newPageIndex;
 }
@@ -113,7 +113,7 @@ int moveToMemory(struct pageInfo *descriptor) {
     struct page tempPage = memory[newPageIndex];
     memory[newPageIndex] = HDD[descriptor->offsetPage];
     HDD[descriptor->offsetPage] = tempPage;
-    descriptor->isUse = 1;
+    descriptor->isUse = true;
     return newPageIndex;
 }
 
@@ -121,7 +121,7 @@ int moveToMemory(struct pageInfo *descriptor) {
 int allocateBlocksOnPage(int blockIndex, int szBlock, struct page *page) {
     int spaceRemaining = szBlock;
     while (spaceRemaining > 0 && page->maxSizeFreeBlock > 0) {
-        page->isFreeBlock[blockIndex] = 0;
+        page->isFreeBlock[blockIndex] = false;
         page->maxSizeFreeBlock--;
         blockIndex++;
         spaceRemaining--;
@@ -152,7 +152,7 @@ void printMemory() {
         printf("%d page (%d times read)\n", pageIndex, memory[pageIndex].timesRead);
         for (int blockIndex = 0; blockIndex < BLOCK_ON_PAGE_NUMBER; blockIndex++) {
 
-            if (memory[pageIndex].isFreeBlock[blockIndex] == 1) {
+            if (memory[pageIndex].isFreeBlock[blockIndex] == true) {
                 printf("%d) _ ", blockIndex);
             } else {
                 printf("%d) %c ", blockIndex, memory[pageIndex].blocks[blockIndex].info);
@@ -166,7 +166,7 @@ void printMemory() {
         printf("%d page (%d times read)\n", pageIndex, HDD[pageIndex].timesRead);
         for (int blockIndex = 0; blockIndex < BLOCK_ON_PAGE_NUMBER; blockIndex++) {
 
-            if (HDD[pageIndex].isFreeBlock[blockIndex] == 1) {
+            if (HDD[pageIndex].isFreeBlock[blockIndex] == true) {
                 printf("%d) _ ", blockIndex);
             } else {
                 printf("%d) %c ", blockIndex, HDD[pageIndex].blocks[blockIndex].info);
@@ -193,20 +193,20 @@ int _init(int n, int szPage) {
         currentPage = &memory[pageIndex];
         currentPage->maxSizeFreeBlock = (unsigned int) szPage;
         currentPage->blocks = calloc((size_t) szPage, sizeof(struct block));
-        currentPage->hasVirtualPage = 0;
+        currentPage->hasVirtualPage = false;
         currentPage->isFreeBlock = calloc((size_t) szPage, sizeof(bool));
         for (int blockIndex = 0; blockIndex < szPage; blockIndex++) {
-            currentPage->isFreeBlock[blockIndex] = 1;
+            currentPage->isFreeBlock[blockIndex] = true;
         }
     }
     for (int pageIndex = 0; pageIndex < PAGE_HDD_NUMBER; pageIndex++) {
         currentPage = &HDD[pageIndex];
         currentPage->maxSizeFreeBlock = (unsigned int) szPage;
         currentPage->blocks = calloc((size_t) szPage, sizeof(struct block));
-        currentPage->hasVirtualPage = 0;
+        currentPage->hasVirtualPage = false;
         currentPage->isFreeBlock = calloc((size_t) szPage, sizeof(bool));
         for (int blockIndex = 0; blockIndex < szPage; blockIndex++) {
-            currentPage->isFreeBlock[blockIndex] = 1;
+            currentPage->isFreeBlock[blockIndex] = true;
         }
     }
     //printf("_init: \n ");
@@ -231,14 +231,14 @@ int _malloc(VA *ptr, size_t szBlock) {
         }
         pageIndex = lastPageDescriptor->offsetPage;
         struct page *lastPage;
-        if (lastPageDescriptor->isUse == 1) {
+        if (lastPageDescriptor->isUse == true) {
             lastPage = &memory[pageIndex];
         } else {
             lastPage = &HDD[pageIndex];
         }
         if (lastPage->maxSizeFreeBlock > 0) {
             for (int blockIndex = 0; blockIndex < BLOCK_ON_PAGE_NUMBER; blockIndex++) {
-                if (lastPage->isFreeBlock[blockIndex] == 1) {
+                if (lastPage->isFreeBlock[blockIndex] == true) {
                     freeBlockIndex = blockIndex;
                     break;
                 }
@@ -262,17 +262,17 @@ int _malloc(VA *ptr, size_t szBlock) {
         int freePageIndex = findFreePageIndexInMemory();
         if (freePageIndex != -1) {
             pageToFill = &memory[freePageIndex];
-            pageDescriptor->isUse = 1;
+            pageDescriptor->isUse = true;
         } else {
             freePageIndex = findFreePageIndexInHDD();
             if (freePageIndex != -1) {
                 pageToFill = &HDD[freePageIndex];
-                pageDescriptor->isUse = 0;
+                pageDescriptor->isUse = false;
             } else {
                 return MEMORY_LACK;
             }
         }
-        pageToFill->hasVirtualPage = 1;
+        pageToFill->hasVirtualPage = true;
         pageDescriptor->offsetPage = freePageIndex;
         pageDescriptor->nextDescriptor = NULL;
         dataRemaining = allocateBlocksOnPage(0, dataRemaining, pageToFill);
@@ -328,7 +328,7 @@ int _read(VA ptr, void *pBuffer, size_t szBuffer) {
     int length = 0;
 
     while (infoRemaining > 0) {
-        if (currentDescriptor->isUse == 0) {
+        if (currentDescriptor->isUse == false) {
             if (moveToMemory(currentDescriptor) == -1) {
                 if (indexArray == NULL) {
                     length = findNumberPagesToMove();
@@ -341,7 +341,7 @@ int _read(VA ptr, void *pBuffer, size_t szBuffer) {
                 moveToHDD(indexArray[indexInSequence]);
                 indexInSequence++;
                 currentDescriptor->offsetPage = moveToMemory(currentDescriptor);
-                currentDescriptor->isUse = 1;
+                currentDescriptor->isUse = true;
             }
 
         }
@@ -390,7 +390,7 @@ int _write(VA ptr, void *pBuffer, size_t szBuffer) {
     int length = 0;
 
     while (infoRemaining > 0) {
-        if (currentDescriptor->isUse == 0) {
+        if (currentDescriptor->isUse == false) {
             if (
                     moveToMemory(currentDescriptor)
                     == -1) {
@@ -405,7 +405,7 @@ int _write(VA ptr, void *pBuffer, size_t szBuffer) {
                 indexInSequence++;
                 currentDescriptor->offsetPage = moveToMemory(currentDescriptor);
                 currentDescriptor->
-                        isUse = 1;
+                        isUse = true;
             }
 
         }
@@ -441,14 +441,14 @@ int _free(VA ptr) {
         pageNumber--;
     }
     struct page *page;
-    if (currentDescriptor->isUse = 1) {
+    if (currentDescriptor->isUse = true) {
         page = &memory[currentDescriptor->offsetPage];
     } else {
         page = &HDD[currentDescriptor->offsetPage];
     }
     for (int blockIndex = 0; blockIndex < BLOCK_ON_PAGE_NUMBER; blockIndex++) {
-        page->isFreeBlock[blockIndex] = 1;
-        page->hasVirtualPage = 0;
+        page->isFreeBlock[blockIndex] = true;
+        page->hasVirtualPage = false;
         page->maxSizeFreeBlock = BLOCK_ON_PAGE_NUMBER;
         page->timesRead = 0;
     }
