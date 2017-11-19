@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include "mmemory.h"
 
 struct block {
@@ -11,9 +12,9 @@ struct page {
 //    struct block*	pFirstFree;		// первый свободный блок
 //    struct block*	pFirstUse;		// первый занятый блок
     unsigned int	maxSizeFreeBlock;	// макс. размер сводного блока
-    char hasVirtualPage;
+    bool hasVirtualPage;
     struct block * blocks;
-    char * isFreeBlock;
+    bool * isFreeBlock;
     unsigned int timesRead;
 
 };
@@ -21,7 +22,7 @@ struct page {
 struct pageInfo {
     unsigned int offsetPage;		// смещение страницы от начала
     // памяти или файла
-    char			isUse;		// флаг, описывающий находится ли
+    bool			isUse;		// флаг, описывающий находится ли
     // страница в памяти или на диске
     struct pageInfo * nextDescriptor;
 

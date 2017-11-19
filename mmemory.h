@@ -5,11 +5,14 @@
 
  ************************************************************************/
 
-
-
 typedef char *VA;                // Тип описывающий адрес блока
 void printVA();
 #include <stdio.h>
+
+#define SUCCESS 0;
+#define WRONG_PARAMETRS -1;
+#define MEMORY_LACK -2;
+#define UNKNOWN_ERROR 1;
 /**
  	@func	_malloc
  	@brief	Выделяет блок памяти определенного размера
